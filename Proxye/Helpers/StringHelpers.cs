@@ -1,9 +1,12 @@
 ﻿using System.Text;
+using Microsoft.Extensions.ObjectPool;
 
-namespace Proxye.Core.Helpers;
+namespace Proxye.Helpers;
 
-public static class StringHelpers
+internal static class StringHelpers
 {
+    private static readonly ObjectPool<StringBuilder> Pool = ObjectPool.Create<StringBuilder>();
+
     public static int GetStartOf(int count, Span<byte> buffer, int targetHash, Span<byte> target)
     {
         var hash = 0;
@@ -28,20 +31,29 @@ public static class StringHelpers
 
     public static string Read(Span<byte> buffer, out int lenght, char endChar = '\0')
     {
-        var sb = new StringBuilder();
-        lenght = 0;
-        foreach (var t in buffer)
+        var sb = Pool.Get();
+        try
         {
-            if (t != '\r' && t != '\n' && t != '\0' && t != endChar)
+            lenght = 0;
+            foreach (var t in buffer)
             {
-                lenght++;
-                sb.Append((char) t);
+                if (t != '\r' && t != '\n' && t != '\0' && t != endChar)
+                {
+                    lenght++;
+                    sb.Append((char) t);
+                }
+                else
+                {
+                    break;
+                }
             }
-            else
-            {
-                break;
-            }
+
+            return sb.ToString();
         }
-        return sb.ToString();
+        finally
+        {
+            sb.Clear();
+            Pool.Return(sb);
+        }
     }
 }

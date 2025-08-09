@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
 using System.Reflection;
-using Proxye.Core.Helpers;
+using Proxye.Helpers;
 
-namespace Proxye.Core;
+namespace Proxye;
 
 public sealed class Tunnel : IDisposable
 {
@@ -11,11 +11,12 @@ public sealed class Tunnel : IDisposable
     private readonly byte[] _localBuffer;
     private readonly byte[] _remoteBuffer;
     private readonly Socket _socket;
+    private static readonly byte[] Socks5ConnectArray = [5, 1, 0];
     private static readonly byte[] HostArray = "Host: ".ToArray().Select(x => (byte) x).ToArray();
     private static readonly int HostHash = HostArray.Select(x => (int) x).Sum();
     private static readonly byte[] ConnectArray = "CONNECT ".ToArray().Select(x => (byte) x).ToArray();
     private static readonly int ConnectHash = ConnectArray.Select(x => (int) x).Sum();
-    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetExecutingAssembly().GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
+    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(Tunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
     private CancellationTokenSource? _cancellationTokenSource;
 
     public string Host { get; private set; }
@@ -46,10 +47,36 @@ public sealed class Tunnel : IDisposable
         var rule = _options.Match(Host);
         switch (rule?.Protocol)
         {
-            case "HTTP":
+            case ProxyeProtocol.HTTP:
                 // Just send all data to another proxy
                 RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 await RemoteSocket.ConnectAsync(rule.Host, rule.Port, token);
+                break;
+            case ProxyeProtocol.SOCKS5:
+                if (isHttps)
+                {
+                    await _socket.SendAsync(Established, token);
+                    count = await _socket.ReceiveAsync(_localBuffer, token);
+                }
+                RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                await RemoteSocket.ConnectAsync(rule.Host, rule.Port, token);
+                await RemoteSocket.SendAsync(Socks5ConnectArray, token);
+                await RemoteSocket.ReceiveAsync(_remoteBuffer, token); // todo: handle answer
+
+                _remoteBuffer[0] = 5;
+                _remoteBuffer[1] = 1;
+                _remoteBuffer[2] = 0;
+                _remoteBuffer[3] = 3;
+                _remoteBuffer[4] = (byte) Host.Length;
+                for (var i = 0; i < Host.Length; i++)
+                {
+                    _remoteBuffer[5 + i] = (byte) Host[i];
+                }
+
+                _remoteBuffer[5 + Host.Length] = (byte) (Port >> 8);
+                _remoteBuffer[6 + Host.Length] = (byte) (Port & 0xff);
+                await RemoteSocket.SendAsync(_remoteBuffer.AsMemory()[..(7 + Host.Length)], token);
+                await RemoteSocket.ReceiveAsync(_remoteBuffer, token); // todo: handle answer
                 break;
             default:
                 // Send 200 OK to client if it's https request

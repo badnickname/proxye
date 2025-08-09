@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Proxye.Core\Proxye.Core.csproj" />
+      <ProjectReference Include="..\Proxye\Proxye.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Proxye.Core.Collections;
+namespace Proxye.Collections;
 
-public sealed class BoundedDictionary<TKey, TValue>(int size) : ConcurrentDictionary<TKey, TValue> where TKey : notnull
+internal sealed class BoundedDictionary<TKey, TValue>(int size) : ConcurrentDictionary<TKey, TValue> where TKey : notnull
 {
-    private readonly LinkedList<TKey> _keys = new();
+    private readonly LinkedList<TKey> _keys = [];
 
     public void Add(TKey key, TValue value)
     {

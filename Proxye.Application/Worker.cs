@@ -1,8 +1,7 @@
 using System.Net.Sockets;
 using Microsoft.Extensions.Options;
-using Proxye.Core;
 
-namespace Proxye;
+namespace Proxye.Application;
 
 public class Worker(TcpListener listener, IOptions<ProxyeOptions> options, ILogger<Worker> logger) : BackgroundService
 {

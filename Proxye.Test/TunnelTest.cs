@@ -1,5 +1,5 @@
 using System.Text;
-using Proxye.Core;
+using Proxye;
 using Proxye.Test.Utils;
 
 namespace Proxye.Test;

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Proxye;
-using Proxye.Core;
+using Proxye.Application;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddTransient<TcpListener>(_ => new TcpListener(IPAddress.Any, 1234));

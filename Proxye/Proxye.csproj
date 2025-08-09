@@ -1,18 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
-        <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>dotnet-Proxye-03df6b41-4639-450b-8ea4-d34e8895aedc</UserSecretsId>
+        <Nullable>enable</Nullable>
         <Version>0.0.1</Version>
+        <Authors>Maltsev Bogdan</Authors>
+        <Description>Simple proxy which able to redirect requests to another proxies</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
+      <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.19" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Proxye.Core\Proxye.Core.csproj" />
-    </ItemGroup>
 </Project>
