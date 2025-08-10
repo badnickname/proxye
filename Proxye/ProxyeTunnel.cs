@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Reflection;
 using Proxye.Helpers;
+using Proxye.Rules;
 
 namespace Proxye;
 
@@ -24,7 +25,7 @@ public interface IProxyeTunnel : IDisposable
     Socket? RemoteSocket { get; }
 }
 
-public sealed class ProxyeTunnel : IProxyeTunnel
+internal sealed class ProxyeTunnel : IProxyeTunnel
 {
     private readonly ProxyeOptions _options;
     private readonly byte[] _localBuffer;

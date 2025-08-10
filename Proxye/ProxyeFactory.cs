@@ -11,7 +11,7 @@ public interface IProxyeFactory
     IProxyeTunnel Create(Socket socket);
 }
 
-public sealed class ProxyeFactory(IOptions<ProxyeOptions>? options) : IProxyeFactory
+internal sealed class ProxyeFactory(IOptions<ProxyeOptions>? options) : IProxyeFactory
 {
     public IProxyeTunnel Create(Socket socket)
     {
