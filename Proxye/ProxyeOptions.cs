@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Concurrent;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Converters;
 using Proxye.Collections;
@@ -8,6 +9,7 @@ namespace Proxye;
 public sealed class ProxyeOptions
 {
     private readonly BoundedDictionary<string, ProxyeRule?> _map = new(5000);
+    private readonly ConcurrentDictionary<ProxyeRule, Regex> _regex = new();
 
     /// <summary>
     ///     Rules for redirecting request to external proxies
@@ -23,7 +25,8 @@ public sealed class ProxyeOptions
 
         foreach (var rule in Rules)
         {
-            var regex = new Regex(rule.Pattern);
+            var regex = _regex.TryGetValue(rule, out var r) ? r : new Regex(rule.Pattern);
+            _regex.TryAdd(rule, regex);
             if (!regex.IsMatch(host)) continue;
             _map.Add(host, rule);
             return rule;

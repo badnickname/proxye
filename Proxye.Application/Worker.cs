@@ -1,13 +1,12 @@
 using System.Net.Sockets;
-using Microsoft.Extensions.Options;
 
 namespace Proxye.Application;
 
-public class Worker(TcpListener listener, IOptions<ProxyeOptions> options, ILogger<Worker> logger) : BackgroundService
+public class Worker(TcpListener listener, IProxyeFactory factory, ILogger<Worker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var tunnels = new List<Tunnel>();
+        var tunnels = new List<IProxyeTunnel>();
         listener.Start();
         try
         {
@@ -29,13 +28,13 @@ public class Worker(TcpListener listener, IOptions<ProxyeOptions> options, ILogg
         }
     }
 
-    private async Task LoopAsync(List<Tunnel> tunnels, CancellationToken stoppingToken)
+    private async Task LoopAsync(List<IProxyeTunnel> tunnels, CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
             var socket = await listener.AcceptSocketAsync(stoppingToken);
             if (stoppingToken.IsCancellationRequested) break;
-            var tunnel = new Tunnel(socket, options.Value);
+            var tunnel = factory.Create(socket);
             Task.Run(async () =>
             {
                 try

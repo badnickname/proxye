@@ -5,7 +5,26 @@ using Proxye.Helpers;
 
 namespace Proxye;
 
-public sealed class Tunnel : IDisposable
+public interface IProxyeTunnel : IDisposable
+{
+    /// <summary>
+    ///     Create tunnel
+    /// </summary>
+    Task StartAsync(CancellationToken token = default);
+
+    /// <summary>
+    ///     Exchanging data through tunnel
+    /// </summary>
+    Task LoopAsync(CancellationToken token = default);
+
+    string Host { get; }
+
+    uint Port { get; }
+
+    Socket? RemoteSocket { get; }
+}
+
+public sealed class ProxyeTunnel : IProxyeTunnel
 {
     private readonly ProxyeOptions _options;
     private readonly byte[] _localBuffer;
@@ -16,7 +35,7 @@ public sealed class Tunnel : IDisposable
     private static readonly int HostHash = HostArray.Select(x => (int) x).Sum();
     private static readonly byte[] ConnectArray = "CONNECT ".ToArray().Select(x => (byte) x).ToArray();
     private static readonly int ConnectHash = ConnectArray.Select(x => (int) x).Sum();
-    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(Tunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
+    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(ProxyeTunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
     private CancellationTokenSource? _cancellationTokenSource;
 
     public string Host { get; private set; }
@@ -25,7 +44,7 @@ public sealed class Tunnel : IDisposable
 
     public Socket? RemoteSocket { get; private set; }
 
-    public Tunnel(Socket socket, ProxyeOptions options)
+    public ProxyeTunnel(Socket socket, ProxyeOptions options)
     {
         _socket = socket;
         _options = options;

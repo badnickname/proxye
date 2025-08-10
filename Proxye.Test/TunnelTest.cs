@@ -21,7 +21,7 @@ public class TunnelTest
         var server = await testServer.GetServerSocket();
         var hostname = port.HasValue ? $"{host}:{port.Value}" : host;
         var data = Encoding.ASCII.GetBytes($"GET / HTTP/1.1\r\nHost: {hostname}\r\nUser-Agent: proxye-test\r\n\r\n");
-        using var tunnel = new Tunnel(server, new ProxyeOptions());
+        using var tunnel = new ProxyeTunnel(server, new ProxyeOptions());
 
         // Act
         await client.SendAsync(data);                   // Send request to proxy
@@ -44,7 +44,7 @@ public class TunnelTest
         var server = await testServer.GetServerSocket();
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
         var data = Encoding.ASCII.GetBytes(payload);
-        using var tunnel = new Tunnel(server, new ProxyeOptions());
+        using var tunnel = new ProxyeTunnel(server, new ProxyeOptions());
         var bytes = new byte[65535];
 
         // Act
@@ -70,7 +70,7 @@ public class TunnelTest
         var server = await testServer.GetServerSocket();
         var shake = "CONNECT 127.0.0.1:9765 HTTP/1.1\r\nHost: 127.0.0.1:8761\r\n\r\n";
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
-        using var tunnel = new Tunnel(server, new ProxyeOptions());
+        using var tunnel = new ProxyeTunnel(server, new ProxyeOptions());
         var bytes = new byte[65535];
 
         // Act
@@ -102,7 +102,7 @@ public class TunnelTest
         var server = await testServer.GetServerSocket();
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
         var sampleData = "bla bla bla";
-        using var tunnel = new Tunnel(server, new ProxyeOptions());
+        using var tunnel = new ProxyeTunnel(server, new ProxyeOptions());
         var bytes = new byte[65535];
         string? result = null;
 
