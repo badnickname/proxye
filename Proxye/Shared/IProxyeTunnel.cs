@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace Proxye;
+namespace Proxye.Shared;
 
 public interface IProxyeTunnel : IDisposable
 {

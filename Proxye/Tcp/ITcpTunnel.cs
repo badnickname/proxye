@@ -1,6 +1,6 @@
-﻿using Proxye.Models;
+﻿using Proxye.Shared;
 
-namespace Proxye.Tunnels;
+namespace Proxye.Tcp;
 
 public interface ITcpTunnel
 {

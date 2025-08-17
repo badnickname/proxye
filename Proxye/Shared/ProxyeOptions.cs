@@ -1,4 +1,4 @@
-﻿using Proxye.Models;
+﻿using Proxye.Shared;
 
 namespace Proxye;
 

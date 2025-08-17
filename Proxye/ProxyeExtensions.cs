@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Proxye.Rules;
 using Proxye.Services;
-using Proxye.Tunnels;
+using Proxye.Shared;
+using Proxye.Tcp;
+using Proxye.Udp;
 
 namespace Proxye;
 

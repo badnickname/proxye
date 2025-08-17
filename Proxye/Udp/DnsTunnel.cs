@@ -3,10 +3,10 @@ using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
 using Proxye.Helpers;
-using Proxye.Models;
+using Proxye.Shared;
 using Proxye.Rules;
 
-namespace Proxye.Tunnels;
+namespace Proxye.Udp;
 
 internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rules) : IUdpTunnel
 {

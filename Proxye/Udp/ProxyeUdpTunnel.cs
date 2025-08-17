@@ -1,9 +1,9 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
-using Proxye.Models;
-using Proxye.Tunnels;
+using Proxye.Shared;
+using Proxye.Shared;
 
-namespace Proxye;
+namespace Proxye.Udp;
 
 internal sealed class UdpProxyeTunnel(UdpReceiveResult result, UdpClient client, ITunnelFactory factory) : IProxyeTunnel
 {

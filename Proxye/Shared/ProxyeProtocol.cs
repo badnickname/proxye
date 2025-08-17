@@ -1,4 +1,4 @@
-﻿namespace Proxye.Models;
+﻿namespace Proxye.Shared;
 
 public enum ProxyeProtocol
 {

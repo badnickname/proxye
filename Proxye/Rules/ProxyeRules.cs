@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Proxye.Collections;
-using Proxye.Models;
+using Proxye.Shared;
 
 namespace Proxye.Rules;
 

@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Proxye.Tcp;
+using Proxye.Udp;
 
-namespace Proxye.Tunnels;
+namespace Proxye.Shared;
 
 internal interface ITunnelFactory
 {

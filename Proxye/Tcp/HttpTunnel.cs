@@ -1,10 +1,10 @@
 ﻿using System.Net.Sockets;
 using System.Reflection;
 using Proxye.Helpers;
-using Proxye.Models;
+using Proxye.Shared;
 using Proxye.Rules;
 
-namespace Proxye.Tunnels;
+namespace Proxye.Tcp;
 
 internal sealed class HttpTunnel(IProxyeRules rules) : ITcpTunnel
 {

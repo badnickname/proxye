@@ -1,11 +1,9 @@
 ﻿using System.Buffers;
-using System.Net;
 using System.Net.Sockets;
 using Proxye.Helpers;
-using Proxye.Models;
-using Proxye.Tunnels;
+using Proxye.Shared;
 
-namespace Proxye;
+namespace Proxye.Tcp;
 
 internal sealed class ProxyeTcpTunnel : IProxyeTunnel
 {
