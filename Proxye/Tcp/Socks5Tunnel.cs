@@ -115,10 +115,4 @@ internal sealed class Socks5Tunnel(IProxyeRules rules) : ITcpTunnel
             }
             return response;
     }
-
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelTcpContext context)
-        => context.RemoteSocket!.SendAsync(received, context.CancellationToken);
-
-    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelTcpContext context)
-        => context.Socket!.SendAsync(received, context.CancellationToken);
 }

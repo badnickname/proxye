@@ -80,10 +80,4 @@ internal sealed class HttpTunnel(IProxyeRules rules) : ITcpTunnel
         await response.Socket.SendAsync(localBuffer.AsMemory()[..count], token);
         return response;
     }
-
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelTcpContext context)
-        => context.RemoteSocket!.SendAsync(received, context.CancellationToken);
-
-    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelTcpContext context)
-        => context.Socket.SendAsync(received, context.CancellationToken);
 }

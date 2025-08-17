@@ -66,7 +66,7 @@ internal sealed class ProxyeTcpTunnel : IProxyeTunnel
             {
                 var count = await RemoteSocket!.ReceiveAsync(_remoteBuffer, cs.Token);
                 if (cs.IsCancellationRequested) return;
-                await _tunnel!.TunnelRemote(_remoteBuffer.AsMemory()[..count], _context);
+                await _context.Socket.SendAsync(_remoteBuffer.AsMemory()[..count], _context.CancellationToken);
             }
             await cs.CancelAsync();
         }, cs.Token);
@@ -76,7 +76,7 @@ internal sealed class ProxyeTcpTunnel : IProxyeTunnel
             {
                 var count = await _socket.ReceiveAsync(_localBuffer, cs.Token);
                 if (cs.IsCancellationRequested) return;
-                await _tunnel!.TunnelLocal(_localBuffer.AsMemory()[..count], _context);
+                await _context.RemoteSocket!.SendAsync(_localBuffer.AsMemory()[..count], _context.CancellationToken);
             }
             await cs.CancelAsync();
         }, cs.Token);
