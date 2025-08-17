@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
 using Proxye.Shared;
-using Proxye.Shared;
 
 namespace Proxye.Udp;
 
