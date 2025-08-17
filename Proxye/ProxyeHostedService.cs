@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Proxye.Shared;
 
-namespace Proxye.Services;
+namespace Proxye;
 
 internal sealed class ProxyeHostedService(IOptions<ProxyeOptions> options, ILogger<ProxyeHostedService> logger, IProxyeFactory factory) : BackgroundService
 {
