@@ -1,7 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 using Newtonsoft.Json.Converters;
+using Proxye.Rules;
 
-namespace Proxye.Rules;
+namespace Proxye.Models;
 
 public sealed class ProxyeRule
 {

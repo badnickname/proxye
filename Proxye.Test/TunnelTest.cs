@@ -41,7 +41,7 @@ public class TunnelTest : IAsyncLifetime
         using var remote = CreateServer(port ?? 80);
         var hostname = port.HasValue ? $"127.0.0.1:{port.Value}" : "127.0.0.1";
         var data = Encoding.ASCII.GetBytes($"GET / HTTP/1.1\r\nHost: {hostname}\r\nUser-Agent: proxye-test\r\n\r\n");
-        using var tunnel = new ProxyeTunnel(ServerSocket, new ProxyeOptions());
+        using var tunnel = TestContainer.CreateTunnel(ServerSocket);
 
         // Act
         await ClientSocket.SendAsync(data);                   // Send request to proxy
@@ -59,7 +59,7 @@ public class TunnelTest : IAsyncLifetime
         using var remote = CreateServer(8761);
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
         var data = Encoding.ASCII.GetBytes(payload);
-        using var tunnel = new ProxyeTunnel(ServerSocket, new ProxyeOptions());
+        using var tunnel = TestContainer.CreateTunnel(ServerSocket);
         var bytes = new byte[65535];
 
         // Act
@@ -80,7 +80,7 @@ public class TunnelTest : IAsyncLifetime
         using var remote = CreateServer(8761);
         var shake = "CONNECT 127.0.0.1:9765 HTTP/1.1\r\nHost: 127.0.0.1:8761\r\n\r\n";
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
-        using var tunnel = new ProxyeTunnel(ServerSocket, new ProxyeOptions());
+        using var tunnel = TestContainer.CreateTunnel(ServerSocket);
 
         // Act
         await ClientSocket.SendAsync(Encoding.ASCII.GetBytes(shake));       // Send request to proxy
@@ -106,7 +106,7 @@ public class TunnelTest : IAsyncLifetime
         using var remote = CreateServer(8761);
         var payload = "GET / HTTP/1.1\r\nHost: 127.0.0.1:8761\r\nUser-Agent: proxye-test\r\n\r\n";
         var sampleData = "bla bla bla";
-        using var tunnel = new ProxyeTunnel(ServerSocket, new ProxyeOptions());
+        using var tunnel = TestContainer.CreateTunnel(ServerSocket);
         
         string? result = null;
 

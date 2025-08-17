@@ -1,8 +1,9 @@
 ﻿using System.Buffers;
+using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using Proxye.Helpers;
-using Proxye.Rules;
+using Proxye.Models;
+using Proxye.Tunnels;
 
 namespace Proxye;
 
@@ -27,17 +28,13 @@ public interface IProxyeTunnel : IDisposable
 
 internal sealed class ProxyeTunnel : IProxyeTunnel
 {
-    private readonly ProxyeOptions _options;
     private readonly byte[] _localBuffer;
     private readonly byte[] _remoteBuffer;
     private readonly Socket _socket;
-    private static readonly byte[] Socks5ConnectArray = [5, 1, 0];
-    private static readonly byte[] HostArray = "Host: ".ToArray().Select(x => (byte) x).ToArray();
-    private static readonly int HostHash = HostArray.Select(x => (int) x).Sum();
-    private static readonly byte[] ConnectArray = "CONNECT ".ToArray().Select(x => (byte) x).ToArray();
-    private static readonly int ConnectHash = ConnectArray.Select(x => (int) x).Sum();
-    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(ProxyeTunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
     private CancellationTokenSource? _cancellationTokenSource;
+    private readonly ITunnelFactory _factory;
+    private ITunnel? _tunnel;
+    private TunnelContext _context;
 
     public string Host { get; private set; }
 
@@ -45,72 +42,43 @@ internal sealed class ProxyeTunnel : IProxyeTunnel
 
     public Socket? RemoteSocket { get; private set; }
 
-    public ProxyeTunnel(Socket socket, ProxyeOptions options)
+    public ProxyeTunnel(Socket socket, ITunnelFactory factory)
     {
         _socket = socket;
-        _options = options;
         _localBuffer = ArrayPool<byte>.Shared.Rent(65535);
         _remoteBuffer = ArrayPool<byte>.Shared.Rent(65535);
+        _factory = factory;
     }
 
     public async Task StartAsync(CancellationToken token)
     {
-        // Get Host and Port of remote server
         var count = await _socket.ReceiveAsync(_localBuffer, token);
-        var startOf = StringHelpers.GetStartOf(count, _localBuffer, HostHash, HostArray);
-        Host = StringHelpers.Read(_localBuffer.AsSpan()[(startOf + HostArray.Length)..], out var length, ':');
-        Port = _localBuffer[startOf + HostArray.Length + length] == ':'
-            ? uint.Parse(StringHelpers.Read(_localBuffer.AsSpan()[(startOf + HostArray.Length + length + 1)..], out _))
-            : 80;
 
-        var isHttps = StringHelpers.GetStartOf(count, _localBuffer, ConnectHash, ConnectArray) > -1;
-        var rule = _options.Match(Host);
-        switch (rule?.Protocol)
+        if (_socket.LocalEndPoint is IPEndPoint { Port: 53 }) // Handle DNS
         {
-            case ProxyeProtocol.HTTP:
-                // Just send all data to another proxy
-                RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await RemoteSocket.ConnectAsync(rule.Host, rule.Port, token);
-                break;
-            case ProxyeProtocol.SOCKS5:
-                if (isHttps)
-                {
-                    await _socket.SendAsync(Established, token);
-                    count = await _socket.ReceiveAsync(_localBuffer, token);
-                }
-                RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await RemoteSocket.ConnectAsync(rule.Host, rule.Port, token);
-                await RemoteSocket.SendAsync(Socks5ConnectArray, token);
-                await RemoteSocket.ReceiveAsync(_remoteBuffer, token); // todo: handle answer
-
-                _remoteBuffer[0] = 5;
-                _remoteBuffer[1] = 1;
-                _remoteBuffer[2] = 0;
-                _remoteBuffer[3] = 3;
-                _remoteBuffer[4] = (byte) Host.Length;
-                for (var i = 0; i < Host.Length; i++)
-                {
-                    _remoteBuffer[5 + i] = (byte) Host[i];
-                }
-
-                _remoteBuffer[5 + Host.Length] = (byte) (Port >> 8);
-                _remoteBuffer[6 + Host.Length] = (byte) (Port & 0xff);
-                await RemoteSocket.SendAsync(_remoteBuffer.AsMemory()[..(7 + Host.Length)], token);
-                await RemoteSocket.ReceiveAsync(_remoteBuffer, token); // todo: handle answer
-                break;
-            default:
-                // Send 200 OK to client if it's https request
-                if (isHttps)
-                {
-                    await _socket.SendAsync(Established, token);
-                    count = await _socket.ReceiveAsync(_localBuffer, token);
-                }
-                RemoteSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await RemoteSocket.ConnectAsync(Host, (int) Port, token);
-                break;
+            _tunnel = _factory.CreateDns();
+        }
+        else if (count > 0 && _localBuffer[0] == 5) // Handle SOCKS5
+        {
+            _tunnel = _factory.CreateSocks5();
+        }
+        else // Handle HTTP
+        {
+            _tunnel = _factory.CreateHttp();
         }
 
-        await RemoteSocket.SendAsync(_localBuffer.AsMemory()[..count], token);
+        _context = new TunnelContext
+        {
+            CancellationToken = token,
+            LocalBuffer = _localBuffer,
+            RemoteBuffer = _remoteBuffer,
+            Socket = _socket
+        };
+        var response = await _tunnel.StartAsync(_localBuffer.AsMemory()[..count], _context);
+        _context.RemoteSocket = response.Socket;
+        RemoteSocket = _context.RemoteSocket;
+        Host = response.Host;
+        Port = response.Port;
     }
 
     public async Task LoopAsync(CancellationToken token)
@@ -122,7 +90,7 @@ internal sealed class ProxyeTunnel : IProxyeTunnel
             {
                 var count = await RemoteSocket!.ReceiveAsync(_remoteBuffer, cs.Token);
                 if (cs.IsCancellationRequested) return;
-                await _socket.SendAsync(_remoteBuffer.AsMemory()[..count], cs.Token);
+                await _tunnel!.TunnelRemote(_remoteBuffer.AsMemory()[..count], _context);
             }
             await cs.CancelAsync();
         }, cs.Token);
@@ -132,7 +100,7 @@ internal sealed class ProxyeTunnel : IProxyeTunnel
             {
                 var count = await _socket.ReceiveAsync(_localBuffer, cs.Token);
                 if (cs.IsCancellationRequested) return;
-                await RemoteSocket!.SendAsync(_localBuffer.AsMemory()[..count], cs.Token);
+                await _tunnel!.TunnelLocal(_remoteBuffer.AsMemory()[..count], _context);
             }
             await cs.CancelAsync();
         }, cs.Token);

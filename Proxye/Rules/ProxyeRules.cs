@@ -1,22 +1,44 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 using Proxye.Collections;
+using Proxye.Models;
 
 namespace Proxye.Rules;
 
-internal static class ProxyeRuleMatcher
+public interface IProxyeRules
+{
+    void BindIp(string host, string ip, TimeSpan? timeout = null);
+
+    ProxyeRule? Match(string host);
+}
+
+internal sealed class ProxyeRules(IOptions<ProxyeOptions> options) : IProxyeRules
 {
     private static readonly BoundedDictionary<string, ProxyeRule?> Map = new(5000);
     private static readonly ConcurrentDictionary<ProxyeRule, Regex> Regex = new();
     private static DomainTree<ProxyeRule>? _hostTree;
     private static ProxyeRule[]? _regexRules;
 
-    public static ProxyeRule? Match(this ProxyeOptions options, string host)
+    public void BindIp(string host, string ip, TimeSpan? timeout = null)
+    {
+        var rule = Match(host);
+        if (rule is null) return;
+        rule.Domains = [..rule.Domains ?? [], ip];
+
+        // todo fix it
+        _hostTree = null;
+        _regexRules = null;
+        Map.Clear();
+        Regex.Clear();
+    }
+
+    public ProxyeRule? Match(string host)
     {
         if (Map.TryGetValue(host, out var result)) return result;
 
-        EnsureHostTreeExist(options);
-        EnsureRegexRulesExist(options);
+        EnsureHostTreeExist(options.Value);
+        EnsureRegexRulesExist(options.Value);
 
         if (_hostTree!.TryGetValue(host, out result))
         {

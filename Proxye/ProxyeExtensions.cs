@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Proxye.Rules;
+using Proxye.Tunnels;
 
 namespace Proxye;
 
@@ -7,6 +9,11 @@ public static class ProxyeExtensions
     public static IServiceCollection AddProxye(this IServiceCollection services, Action<ProxyeOptions>? configure = null)
     {
         services.AddSingleton<IProxyeFactory, ProxyeFactory>();
+        services.AddTransient<DnsTunnel>();
+        services.AddTransient<Socks5Tunnel>();
+        services.AddTransient<HttpTunnel>();
+        services.AddSingleton<IProxyeRules, ProxyeRules>();
+        services.AddSingleton<ITunnelFactory, TunnelFactory>();
         services.AddOptions<ProxyeOptions>();
         if (configure is not null) services.Configure(configure);
         return services;
