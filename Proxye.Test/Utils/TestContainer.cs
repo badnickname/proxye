@@ -16,6 +16,6 @@ public static class TestContainer
     {
         var provider = CreateProvider();
         var factory = provider.GetRequiredService<IProxyeFactory>();
-        return factory.Create(socket);
+        return factory.CreateTcp(socket);
     }
 }

@@ -1,13 +1,9 @@
-using System.Net;
-using System.Net.Sockets;
 using Proxye;
-using Proxye.Application;
 
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddTransient<TcpListener>(_ => new TcpListener(IPAddress.Any, 1234));
-builder.Services.AddHostedService<Worker>();
 builder.Services
     .AddProxye()
+    .AddProxyeHostedListener()
     .Configure<ProxyeOptions>(builder.Configuration.GetSection("Proxye"));
 
 var host = builder.Build();

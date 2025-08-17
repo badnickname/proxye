@@ -2,15 +2,15 @@
 
 namespace Proxye.Models;
 
-public struct TunnelContext
+internal struct TunnelUdpContext
 {
-    public Socket Socket { get; init; }
+    public UdpClient Socket { get; init; }
 
     public Socket? RemoteSocket { get; set; }
 
     public byte[] LocalBuffer { get; init; }
 
-    public byte[] RemoteBuffer { get; init; }
+    public UdpReceiveResult ReceiveResult { get; init; }
 
     public CancellationToken CancellationToken { get; init; }
 }

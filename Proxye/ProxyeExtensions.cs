@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Proxye.Rules;
+using Proxye.Services;
 using Proxye.Tunnels;
 
 namespace Proxye;
@@ -16,6 +17,12 @@ public static class ProxyeExtensions
         services.AddSingleton<ITunnelFactory, TunnelFactory>();
         services.AddOptions<ProxyeOptions>();
         if (configure is not null) services.Configure(configure);
+        return services;
+    }
+
+    public static IServiceCollection AddProxyeHostedListener(this IServiceCollection services)
+    {
+        services.AddHostedService<ProxyeHostedService>();
         return services;
     }
 }

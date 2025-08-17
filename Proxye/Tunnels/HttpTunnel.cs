@@ -6,16 +6,16 @@ using Proxye.Rules;
 
 namespace Proxye.Tunnels;
 
-internal sealed class HttpTunnel(IProxyeRules rules) : ITunnel
+internal sealed class HttpTunnel(IProxyeRules rules) : ITcpTunnel
 {
     private static readonly byte[] HostArray = "Host: ".ToArray().Select(x => (byte) x).ToArray();
     private static readonly int HostHash = HostArray.Select(x => (int) x).Sum();
     private static readonly byte[] ConnectArray = "CONNECT ".ToArray().Select(x => (byte) x).ToArray();
     private static readonly int ConnectHash = ConnectArray.Select(x => (int) x).Sum();
     private static readonly byte[] Socks5ConnectArray = [5, 1, 0];
-    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(ProxyeTunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
+    private static readonly byte[] Established = $"HTTP/1.1 200 Connection Established\r\nProxy-Agent: Proxye/{Assembly.GetAssembly(typeof(ProxyeTcpTunnel))?.GetName().Version!.ToString()}\r\n\r\n".ToArray().Select(x => (byte) x).ToArray();
     
-    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelContext context)
+    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelTcpContext context)
     {
         var localBuffer = context.LocalBuffer;
         var remoteBuffer = context.RemoteBuffer;
@@ -80,9 +80,9 @@ internal sealed class HttpTunnel(IProxyeRules rules) : ITunnel
         return response;
     }
 
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelContext context)
+    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelTcpContext context)
         => context.RemoteSocket!.SendAsync(received, context.CancellationToken);
 
-    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelContext context)
+    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelTcpContext context)
         => context.Socket.SendAsync(received, context.CancellationToken);
 }

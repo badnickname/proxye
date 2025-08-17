@@ -7,11 +7,11 @@ using Proxye.Rules;
 
 namespace Proxye.Tunnels;
 
-internal sealed class Socks5Tunnel(IProxyeRules rules) : ITunnel
+internal sealed class Socks5Tunnel(IProxyeRules rules) : ITcpTunnel
 {
     private static readonly byte[] Socks5ConnectArray = [5, 1, 0];
 
-    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelContext context)
+    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelTcpContext context)
     {
         var localBuffer = context.LocalBuffer;
         var remoteBuffer = context.RemoteBuffer;
@@ -115,9 +115,9 @@ internal sealed class Socks5Tunnel(IProxyeRules rules) : ITunnel
             return response;
     }
 
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelContext context)
+    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelTcpContext context)
         => context.RemoteSocket!.SendAsync(received, context.CancellationToken);
 
-    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelContext context)
+    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelTcpContext context)
         => context.Socket!.SendAsync(received, context.CancellationToken);
 }

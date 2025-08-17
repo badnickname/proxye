@@ -8,11 +8,11 @@ using Proxye.Rules;
 
 namespace Proxye.Tunnels;
 
-public sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rules) : ITunnel
+internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rules) : IUdpTunnel
 {
     private static readonly ObjectPool<StringBuilder> Pool = ObjectPool.Create<StringBuilder>();
 
-    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelContext context)
+    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelUdpContext context)
     {
         var dns = options.Value.DnsHost;
         var remote = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -26,10 +26,7 @@ public sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rule
         };
     }
 
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelContext context)
-        => context.RemoteSocket!.SendAsync(received, context.CancellationToken);
-
-    public ValueTask<int> TunnelRemote(Memory<byte> received, TunnelContext context)
+    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelUdpContext context)
     {
         var sb = Pool.Get();
         try
@@ -70,7 +67,7 @@ public sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rule
             Pool.Return(sb);
         }
 
-        return context.Socket.SendAsync(received, context.CancellationToken);
+        return context.Socket.SendAsync(received, context.ReceiveResult.RemoteEndPoint, context.CancellationToken);
     }
 
     private static string ReadIpv4(Span<byte> buffer) => $"{buffer[0]}.{buffer[1]}.{buffer[2]}.{buffer[3]}";

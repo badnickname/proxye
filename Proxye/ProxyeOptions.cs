@@ -1,5 +1,4 @@
 ﻿using Proxye.Models;
-using Proxye.Rules;
 
 namespace Proxye;
 
@@ -10,5 +9,7 @@ public sealed class ProxyeOptions
     /// </summary>
     public ProxyeRule[] Rules { get; set; } = [];
 
-    public string DnsHost { get; set; }
+    public int Port { get; set; } = 9567;
+
+    public string DnsHost { get; set; } = "1.1.1.1";
 }
