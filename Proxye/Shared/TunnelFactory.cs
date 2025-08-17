@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Proxye.Interfaces;
 using Proxye.Tcp;
 using Proxye.Udp;
 

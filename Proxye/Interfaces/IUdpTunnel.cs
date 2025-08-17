@@ -1,6 +1,7 @@
 ﻿using Proxye.Shared;
+using Proxye.Udp;
 
-namespace Proxye.Udp;
+namespace Proxye.Interfaces;
 
 internal interface IUdpTunnel
 {

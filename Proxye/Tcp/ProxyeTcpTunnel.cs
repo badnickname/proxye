@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
 using Proxye.Helpers;
+using Proxye.Interfaces;
 using Proxye.Shared;
 
 namespace Proxye.Tcp;

@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using Newtonsoft.Json.Converters;
-using Proxye.Shared;
 
 namespace Proxye.Shared;
 

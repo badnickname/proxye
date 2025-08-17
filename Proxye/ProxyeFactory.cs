@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.DependencyInjection;
+using Proxye.Interfaces;
 using Proxye.Shared;
 using Proxye.Tcp;
 using Proxye.Udp;

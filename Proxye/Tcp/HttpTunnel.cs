@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Reflection;
 using Proxye.Helpers;
+using Proxye.Interfaces;
 using Proxye.Shared;
 using Proxye.Rules;
 

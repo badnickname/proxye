@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
 using Proxye.Helpers;
+using Proxye.Interfaces;
 using Proxye.Shared;
 using Proxye.Rules;
 
