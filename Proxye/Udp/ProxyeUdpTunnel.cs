@@ -36,8 +36,7 @@ internal sealed class UdpProxyeTunnel(UdpReceiveResult result, UdpClient client,
         await Semaphore.WaitAsync(token);
         try
         {
-            await _context.Socket.SendAsync(_localBuffer.AsMemory()[..count], _context.ReceiveResult.RemoteEndPoint, _context.CancellationToken);
-            // await _tunnel!.TunnelLocal(_localBuffer.AsMemory()[..count], _context);
+            await _tunnel!.TunnelLocal(_localBuffer.AsMemory()[..count], _context);
         }
         finally
         {

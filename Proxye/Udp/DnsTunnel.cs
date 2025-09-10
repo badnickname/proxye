@@ -16,9 +16,11 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
     public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelUdpContext context)
     {
         var dns = options.Value.DnsHost;
+        
         var remote = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         await remote.ConnectAsync(dns, 53);
         await remote.SendAsync(received, context.CancellationToken);
+        
         return new TunnelConnection
         {
             Host = dns,
@@ -32,34 +34,47 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
         var sb = Pool.Get();
         try
         {
+            var udp = received.Span[7..]; // skip udp header
+
+            // skip headers part
+            var span = udp[11..];
+
             // skip queries part
-            var span = received.Span;
-            var count = (span[4] << 8) + span[5];
             var length = 0;
-            for (var i = 0; i < count; i++)
+            for (var i = 0; i < span.Length && span[i] != 192; i++)
             {
-                for (var j = i; j < span.Length; j += span[j] + 1)
-                {
-                    length += span[j] + 1;
-                    if (span[j] == 0) break;
-                }
-                length += 4;
+                length++;
             }
 
-            // receive first ip from answer
-            var answer = span[(12 + length)..];
+            span = span[length..];
 
-            var reference = (answer[0] << 8) + answer[1];
-            var host = ReadHost(span[reference..]);
+            // receive first name from response
+            var position = span[1];
+            var nameSpan = received.Span[position..];
+            var host = ReadHost(nameSpan);
 
-            var ttl = ((long)answer[6] << 24) + ((long)answer[7] << 16) + (answer[8] << 8) + answer[9];
+            // skip name, type and class
+            span = span[6..];
 
-            var len = answer[10] + (answer[11] << 8);
+            // ttl in seconds
+            var ttl = (span[0] << 24) + (span[1] << 16) + (span[2] << 8) + span[3];
+            span = span[4..];
 
-            if (len == 4)
+            // get ip length
+            var ipLength = (span[0] << 8) | span[1];
+            span = span[2..];
+
+            // read and bind ip
+            switch (ipLength)
             {
-                var ip = ReadIpv4(answer.Slice(12, 4));
-                rules.BindIp(host, ip, TimeSpan.FromSeconds(ttl));
+                case 4:
+                    var ipv4 = ReadIpv4(span[..ipLength]);
+                    rules.BindIp(host, ipv4, TimeSpan.FromSeconds(ttl));
+                    break;
+                case 16:
+                    var ipv6 = ReadIpv6(span[..ipLength]);
+                    rules.BindIp(host, ipv6, TimeSpan.FromSeconds(ttl));
+                    break;
             }
         }
         finally
@@ -72,6 +87,9 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
     }
 
     private static string ReadIpv4(Span<byte> buffer) => $"{buffer[0]}.{buffer[1]}.{buffer[2]}.{buffer[3]}";
+    
+    private static string ReadIpv6(Span<byte> buffer) =>
+        $"{buffer[0]:X2}{buffer[1]:X2}:{buffer[2]:X2}{buffer[3]:X2}:{buffer[4]:X2}{buffer[5]:X2}:{buffer[6]:X2}{buffer[7]:X2}:{buffer[8]:X2}{buffer[9]:X2}:{buffer[10]:X2}{buffer[11]:X2}:{buffer[12]:X2}{buffer[13]:X2}:{buffer[14]:X2}{buffer[15]:X2}";
 
     private static string ReadHost(Span<byte> buffer)
     {
@@ -81,9 +99,11 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
             for (var i = 0; i < buffer.Length && buffer[i] != 0; i++)
             {
                 var count = buffer[i];
-                sb.Append(StringHelpers.Read(buffer.Slice(i, count), out _));
+                sb.Append(StringHelpers.Read(buffer.Slice(i + 1, count), out _));
+                sb.Append('.');
                 i += count;
             }
+            sb.Remove(sb.Length - 1, 1);
             return sb.ToString();
         }
         finally
