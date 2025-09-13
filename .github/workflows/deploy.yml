@@ -20,6 +20,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Deploy
         run: |
-          dotnet publish -c Release -r linux-arm -o ./build
+          dotnet publish Proxye.Application -c Release -r linux-arm -o ./build
           docker build --platform linux/arm/v7 . -t ghcr.io/badnickname/proxye/proxye:latest
           docker push ghcr.io/badnickname/proxye/proxye:latest
