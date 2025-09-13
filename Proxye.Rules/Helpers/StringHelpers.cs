@@ -17,11 +17,12 @@ public static class StringHelpers
             {
                 for (var j = 0; j < target.Length; j++)
                 {
-                    if (buffer[i + j] != target[j]) break;
+                    if (buffer[i + j] != target[j]) goto failed;
                 }
                 return i;
             }
 
+            failed:
             hash -= buffer[i];
             hash += buffer[i + target.Length];
         }
