@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Proxye.Helpers;
 using Proxye.Interfaces;
 using Proxye.Shared;
@@ -41,7 +43,18 @@ internal sealed class Socks5Tunnel(IProxyeRules rules) : ITcpTunnel
                     if (ruleSocks?.Protocol == ProxyeProtocol.SOCKS5)
                     {
                         response.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        await response.Socket.ConnectAsync(ruleSocks.Host, ruleSocks.Port, token);
+
+                        var request = new HttpRequestMessage(HttpMethod.Get, $"https://1.1.1.1/dns-query?name={ruleSocks.Host}");
+                        request.Headers.Host = "cloudflare-dns.com";
+                        request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-message"));
+                        using var httpclient = new HttpClient();
+                        var httpResponse = await httpclient.SendAsync(request, token);
+                        var jsonText = await httpResponse.Content.ReadAsStringAsync(token);
+                        var json = JsonSerializer.Deserialize<JsonNode>(jsonText);
+
+                        var address = json?["Answer"]?.AsArray()?[0]?["data"]?.GetValue<string>()!;
+
+                        await response.Socket.ConnectAsync(address, ruleSocks.Port, token);
                         await response.Socket.SendAsync(Socks5ConnectArray, token);
                         await response.Socket.ReceiveAsync(remoteBuffer, token); // todo: handle answer
 
