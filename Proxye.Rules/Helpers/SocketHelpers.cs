@@ -1,8 +1,8 @@
 ﻿using System.Net.Sockets;
 
-namespace Proxye.Helpers;
+namespace Proxye.Rules.Helpers;
 
-internal static class SocketHelpers
+public static class SocketHelpers
 {
     public static bool IsConnected(this Socket socket)
     {

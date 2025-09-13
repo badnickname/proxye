@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Microsoft.Extensions.ObjectPool;
 
-namespace Proxye.Helpers;
+namespace Proxye.Rules.Helpers;
 
-internal static class StringHelpers
+public static class StringHelpers
 {
     private static readonly ObjectPool<StringBuilder> Pool = ObjectPool.Create<StringBuilder>();
 

@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-Proxye-03df6b41-4639-450b-8ea4-d34e8895aedc</UserSecretsId>
         <RootNamespace>Proxye</RootNamespace>
+        <PublishSingleFile>true</PublishSingleFile>
     </PropertyGroup>
 
     <ItemGroup>
