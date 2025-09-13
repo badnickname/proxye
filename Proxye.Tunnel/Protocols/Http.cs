@@ -42,7 +42,7 @@ internal sealed class Http(IRules rules, IDnsResolver dns) : IProtocol
             case Protocol.HTTP:
                 // Just send all data to another proxy
                 response.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await response.Socket.ConnectAsync(resolvedIp, rule.Port, token);
+                await response.Socket.ConnectAsync(rule.Host, rule.Port, token);
                 break;
             case Protocol.SOCKS5:
                 if (isHttps)
@@ -51,7 +51,7 @@ internal sealed class Http(IRules rules, IDnsResolver dns) : IProtocol
                     count = await socket.ReceiveAsync(localBuffer, token);
                 }
                 response.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                await response.Socket.ConnectAsync(resolvedIp, rule.Port, token);
+                await response.Socket.ConnectAsync(rule.Host, rule.Port, token);
                 await response.Socket.SendAsync(Socks5ConnectArray, token);
                 await response.Socket.ReceiveAsync(remoteBuffer, token); // todo: handle answer
 

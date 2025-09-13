@@ -39,24 +39,13 @@ internal sealed class Socks5(IRules rules, IDnsResolver dns) : IProtocol
                 // host
                 response.Host = StringHelpers.Read(localBuffer.AsSpan().Slice(5, localBuffer[4]), out _);
                 response.Port = (((uint)localBuffer[5 + localBuffer[4]]) << 8) | (uint) (localBuffer[6 + localBuffer[4]] & 0xff);
-                var resolvedIp = await dns.Resolve(response.Host, token);
 
                 var ruleSocks = rules.Match(response.Host);
                 if (ruleSocks?.Protocol == Protocol.SOCKS5)
                 {
                     response.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"https://1.1.1.1/dns-query?name={ruleSocks.Host}");
-                    request.Headers.Host = "cloudflare-dns.com";
-                    request.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/dns-message"));
-                    using var httpclient = new HttpClient();
-                    var httpResponse = await httpclient.SendAsync(request, token);
-                    var jsonText = await httpResponse.Content.ReadAsStringAsync(token);
-                    var json = JsonSerializer.Deserialize<JsonNode>(jsonText);
-
-                    var address = json?["Answer"]?.AsArray()?[0]?["data"]?.GetValue<string>()!;
-
-                    await response.Socket.ConnectAsync(address, ruleSocks.Port, token);
+                    await response.Socket.ConnectAsync(ruleSocks.Host, ruleSocks.Port, token);
                     await response.Socket.SendAsync(Socks5ConnectArray, token);
                     await response.Socket.ReceiveAsync(remoteBuffer, token); // todo: handle answer
 
@@ -77,6 +66,7 @@ internal sealed class Socks5(IRules rules, IDnsResolver dns) : IProtocol
                 }
                 else
                 {
+                    var resolvedIp = await dns.Resolve(response.Host, token);
                     response.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     await response.Socket.ConnectAsync(resolvedIp, (int) response.Port, token);
                 }

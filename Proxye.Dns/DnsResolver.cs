@@ -43,7 +43,7 @@ internal sealed class DnsResolver(IHttpClientFactory factory, IMemoryCache cache
         var array = json?["Answer"]?.AsArray();
         if (array is null || array.Count == 0) return host;
 
-        var data = array["data"]?.AsObject();
+        var data = array[0]?.AsObject();
 
         if (data is null) return host;
 
