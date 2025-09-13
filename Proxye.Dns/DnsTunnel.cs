@@ -1,40 +1,46 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Microsoft.Extensions.Options;
-using Proxye.Helpers;
-using Proxye.Interfaces;
-using Proxye.Shared;
 using Proxye.Rules;
+using Proxye.Rules.Helpers;
 
-namespace Proxye.Udp;
+namespace Proxye.Dns;
 
-internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules rules) : IUdpTunnel
+/// <summary>
+///     Interface for tunneling DNS queries and responses
+/// </summary>
+public interface IDnsTunnel
+{
+    /// <summary>
+    ///     Tunnel DNS queries and responses
+    /// </summary>
+    Task<(string Host, Memory<byte> Bytes)> Tunnel(Memory<byte> data, CancellationToken cancellationToken);
+}
+
+internal sealed class DnsTunnel(IHttpClientFactory factory, IRules rules, IOptions<DnsOptions> options) : IDnsTunnel
 {
     private static readonly ObjectPool<StringBuilder> Pool = ObjectPool.Create<StringBuilder>();
-
-    public async Task<TunnelConnection> StartAsync(Memory<byte> received, TunnelUdpContext context)
+    
+    public async Task<(string Host, Memory<byte> Bytes)> Tunnel(Memory<byte> data, CancellationToken cancellationToken)
     {
-        var dns = options.Value.DnsHost;
-        
-        var remote = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        await remote.ConnectAsync(dns, 53);
-        await remote.SendAsync(received, context.CancellationToken);
-        
-        return new TunnelConnection
-        {
-            Host = dns,
-            Port = 53,
-            Socket = remote
-        };
+        var client = factory.CreateClient("dns");
+        var request = new HttpRequestMessage(HttpMethod.Post, options.Value.Url);
+        request.Content = new ByteArrayContent(data.ToArray()); // todo fix allocation
+        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/dns-message");
+        var response = await client.SendAsync(request, cancellationToken);
+        var responseBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
+        var host = Analyze(responseBytes);
+
+        return (host, responseBytes);
     }
 
-    public ValueTask<int> TunnelLocal(Memory<byte> received, TunnelUdpContext context)
+    private string Analyze(byte[] received)
     {
         var sb = Pool.Get();
         try
         {
-            var udp = received.Span[7..]; // skip udp header
+            var udp = received[7..]; // skip udp header
 
             // skip headers part
             var span = udp[11..];
@@ -50,7 +56,7 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
 
             // receive first name from response
             var position = span[1];
-            var nameSpan = received.Span[position..];
+            var nameSpan = received[position..];
             var host = ReadHost(nameSpan);
 
             // skip name, type and class
@@ -76,18 +82,18 @@ internal sealed class DnsTunnel(IOptions<ProxyeOptions> options, IProxyeRules ru
                     rules.BindIp(host, ipv6, TimeSpan.FromSeconds(ttl));
                     break;
             }
+
+            return host;
         }
         finally
         {
             sb.Clear();
             Pool.Return(sb);
         }
-
-        return context.Socket.SendAsync(received, context.ReceiveResult.RemoteEndPoint, context.CancellationToken);
     }
 
     private static string ReadIpv4(Span<byte> buffer) => $"{buffer[0]}.{buffer[1]}.{buffer[2]}.{buffer[3]}";
-    
+
     private static string ReadIpv6(Span<byte> buffer) =>
         $"{buffer[0]:X2}{buffer[1]:X2}:{buffer[2]:X2}{buffer[3]:X2}:{buffer[4]:X2}{buffer[5]:X2}:{buffer[6]:X2}{buffer[7]:X2}:{buffer[8]:X2}{buffer[9]:X2}:{buffer[10]:X2}{buffer[11]:X2}:{buffer[12]:X2}{buffer[13]:X2}:{buffer[14]:X2}{buffer[15]:X2}";
 

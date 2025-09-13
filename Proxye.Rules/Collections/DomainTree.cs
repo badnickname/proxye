@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Proxye.Collections;
+namespace Proxye.Rules.Collections;
 
 internal sealed class DomainTree<T>
 {

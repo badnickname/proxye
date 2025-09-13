@@ -1,9 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 using Newtonsoft.Json.Converters;
 
-namespace Proxye.Shared;
+namespace Proxye.Rules.Models;
 
-public sealed class ProxyeRule
+public sealed class Rule
 {
     /// <summary>
     ///     Regex pattern for matching rule for host
@@ -19,7 +19,7 @@ public sealed class ProxyeRule
     ///     Protocol of proxy which receives matched request
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
-    public ProxyeProtocol Protocol { get; set; }
+    public Protocol Protocol { get; set; }
 
     /// <summary>
     ///     Host of proxy which receives matched request

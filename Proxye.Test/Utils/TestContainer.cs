@@ -1,7 +1,6 @@
 ﻿using System.Net.Sockets;
 using Microsoft.Extensions.DependencyInjection;
-using Proxye.Interfaces;
-using Proxye.Shared;
+using Proxye.Tunnel;
 
 namespace Proxye.Test.Utils;
 
@@ -18,6 +17,6 @@ public static class TestContainer
     {
         var provider = CreateProvider();
         var factory = provider.GetRequiredService<IProxyeFactory>();
-        return factory.CreateTcp(socket);
+        return factory.Create(socket);
     }
 }

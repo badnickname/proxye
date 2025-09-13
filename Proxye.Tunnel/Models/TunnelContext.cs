@@ -1,8 +1,8 @@
 ﻿using System.Net.Sockets;
 
-namespace Proxye.Tcp;
+namespace Proxye.Tunnel.Models;
 
-public struct TunnelTcpContext
+public struct TunnelContext
 {
     public Socket Socket { get; init; }
 

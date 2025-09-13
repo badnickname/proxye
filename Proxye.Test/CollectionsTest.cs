@@ -1,4 +1,4 @@
-﻿using Proxye.Collections;
+﻿using Proxye.Rules.Collections;
 
 namespace Proxye.Test;
 

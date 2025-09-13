@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Proxye.Dns;
 using Proxye.Rules;
-using Proxye.Shared;
-using Proxye.Tcp;
-using Proxye.Udp;
+using Proxye.Rules.Models;
+using Proxye.Tunnel;
 
 namespace Proxye;
 
@@ -10,20 +10,24 @@ public static class ProxyeExtensions
 {
     public static IServiceCollection AddProxye(this IServiceCollection services, Action<ProxyeOptions>? configure = null)
     {
-        services.AddSingleton<IProxyeFactory, ProxyeFactory>();
-        services.AddTransient<DnsTunnel>();
-        services.AddTransient<Socks5Tunnel>();
-        services.AddTransient<HttpTunnel>();
-        services.AddSingleton<IProxyeRules, ProxyeRules>();
-        services.AddSingleton<ITunnelFactory, TunnelFactory>();
-        services.AddOptions<ProxyeOptions>();
-        if (configure is not null) services.Configure(configure);
-        return services;
-    }
+        var options = new ProxyeOptions();
+        configure?.Invoke(options);
 
-    public static IServiceCollection AddProxyeHostedListener(this IServiceCollection services)
-    {
-        services.AddHostedService<ProxyeHostedService>();
+        services
+            .AddDns()
+            .AddRules()
+            .AddTunnel()
+            .AddOptions<ProxyeOptions>().Configure(o => configure?.Invoke(o)).Services
+            .Configure<List<Rule>>(o => o.AddRange(options.Rules))
+            .Configure<DnsOptions>(o =>
+            {
+                o.Url = options.Dns.Url;
+                o.BaseTtl = options.Dns.BaseTtl;
+            })
+            .AddHostedService<TunnelHostedService>();
+
+        if (options.EnableDns) services.AddHostedService<DnsHostedService>();
+        services.AddHostedService<TunnelHostedService>();
         return services;
     }
 }

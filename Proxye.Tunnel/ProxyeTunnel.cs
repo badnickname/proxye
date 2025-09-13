@@ -1,20 +1,31 @@
 ﻿using System.Buffers;
 using System.Net.Sockets;
-using Proxye.Helpers;
-using Proxye.Interfaces;
-using Proxye.Shared;
+using Proxye.Rules.Helpers;
+using Proxye.Tunnel.Models;
+using Proxye.Tunnel.Protocols;
 
-namespace Proxye.Tcp;
+namespace Proxye.Tunnel;
 
-internal sealed class ProxyeTcpTunnel : IProxyeTunnel
+public interface IProxyeTunnel : IDisposable
+{
+    string Host { get; }
+
+    uint Port { get; }
+
+    Task StartAsync(CancellationToken token);
+
+    Task LoopAsync(CancellationToken token);
+}
+
+internal sealed class ProxyeTunnel : IProxyeTunnel
 {
     private readonly byte[] _localBuffer;
     private readonly byte[] _remoteBuffer;
     private readonly Socket _socket;
     private CancellationTokenSource? _cancellationTokenSource;
-    private readonly ITunnelFactory _factory;
-    private ITcpTunnel? _tunnel;
-    private TunnelTcpContext _context;
+    private readonly IProtocolFactory _factory;
+    private TunnelContext _context;
+    private IProtocol? _tunnel;
 
     public string Host { get; private set; }
 
@@ -22,7 +33,7 @@ internal sealed class ProxyeTcpTunnel : IProxyeTunnel
 
     public Socket? RemoteSocket { get; private set; }
 
-    public ProxyeTcpTunnel(Socket socket, ITunnelFactory factory)
+    public ProxyeTunnel(Socket socket, IProtocolFactory factory)
     {
         _socket = socket;
         _localBuffer = ArrayPool<byte>.Shared.Rent(65535);
@@ -43,14 +54,14 @@ internal sealed class ProxyeTcpTunnel : IProxyeTunnel
             _tunnel = _factory.CreateHttp();
         }
 
-        _context = new TunnelTcpContext
+        _context = new TunnelContext
         {
             CancellationToken = token,
             LocalBuffer = _localBuffer,
             RemoteBuffer = _remoteBuffer,
             Socket = _socket
         };
-        var response = await _tunnel.StartAsync(_localBuffer.AsMemory()[..count], _context);
+        var response = await _tunnel.HandshakeAsync(_localBuffer.AsMemory()[..count], _context);
         _context.RemoteSocket = response.Socket;
         RemoteSocket = _context.RemoteSocket;
         Host = response.Host;

@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
 
-namespace Proxye.Shared;
+namespace Proxye.Tunnel.Models;
 
 public struct TunnelConnection
 {

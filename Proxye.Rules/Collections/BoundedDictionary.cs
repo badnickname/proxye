@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Proxye.Collections;
+namespace Proxye.Rules.Collections;
 
 internal sealed class BoundedDictionary<TKey, TValue>(int size) : ConcurrentDictionary<TKey, TValue> where TKey : notnull
 {
