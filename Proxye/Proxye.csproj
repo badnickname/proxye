@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.0.1</Version>
+        <Version>0.0.2</Version>
         <Authors>Maltsev Bogdan</Authors>
         <Description>Simple proxy which able to redirect requests to another proxies</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
