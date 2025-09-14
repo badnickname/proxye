@@ -2,7 +2,7 @@
 <package>
     <metadata>
         <id>Proxye</id>
-        <version>0.0.2</version>
+        <version>0.0.3</version>
         <authors>Maltsev Bogdan</authors>
         <owners>Maltsev Bogdan</owners>
         <description>Simple SOCKS5/HTTP proxy which able to redirect requests to another proxies</description>
@@ -10,13 +10,13 @@
         <readme>README.md</readme>
         <license type="expression">MIT</license>
         <dependencies>
-            <dependency id="Microsoft.Extensions.Hosting.Abstractions" version="8.0.2" />
-            <dependency id="Microsoft.Extensions.Caching.Memory" version="8.0.1" />
-            <dependency id="Microsoft.Extensions.Http" version="8.0.1" />
-            <dependency id="Microsoft.Extensions.ObjectPool" version="8.0.20" />
-            <dependency id="Microsoft.Extensions.Options" version="8.0.1" />
-            <dependency id="Newtonsoft.Json" version="13.0.1" />
-            <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="8.0.1" />
+            <dependency id="Microsoft.Extensions.Hosting.Abstractions" version="8.0.0" />
+            <dependency id="Microsoft.Extensions.Caching.Memory" version="8.0.0" />
+            <dependency id="Microsoft.Extensions.Http" version="8.0.0" />
+            <dependency id="Microsoft.Extensions.ObjectPool" version="8.0.0" />
+            <dependency id="Microsoft.Extensions.Options" version="8.0.0" />
+            <dependency id="Newtonsoft.Json" version="13.0.0" />
+            <dependency id="Microsoft.Extensions.DependencyInjection.Abstractions" version="8.0.0" />
         </dependencies>
     </metadata>
 
