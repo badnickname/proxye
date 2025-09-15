@@ -35,8 +35,6 @@ internal sealed class Http(IRules rules, IDnsResolver dns) : IProtocol
         var isHttps = StringHelpers.GetStartOf(count, localBuffer, ConnectHash, ConnectArray) > -1;
         var rule = rules.Match(response.Host);
 
-        var resolvedIp = await dns.Resolve(response.Host, token);
-
         switch (rule?.Protocol)
         {
             case Protocol.HTTP:
@@ -71,6 +69,7 @@ internal sealed class Http(IRules rules, IDnsResolver dns) : IProtocol
                 await response.Socket.ReceiveAsync(remoteBuffer, token); // todo: handle answer
                 break;
             default:
+                var resolvedIp = await dns.Resolve(response.Host, token);
                 // Send 200 OK to client if it's https request
                 if (isHttps)
                 {
