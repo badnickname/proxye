@@ -7,7 +7,7 @@ Simple HTTP/SOCKS5 proxy for .NET which able to redirect requests to another pro
 
 ## Installation
 ```bash
-dotnet add package Proxye --version 0.0.2
+dotnet add package Proxye --version 0.0.3
 ```
 
 ## Configuration
