@@ -1,43 +1,55 @@
-﻿# Proxye
-Simple HTTP/SOCKS5 proxy for .NET which able to redirect requests to another proxies  
+﻿# Proxye 🌐
+Proxye is a simple, lightweight HTTP/SOCKS5 proxy for .NET designed to help you redirect requests seamlessly through other proxies or services. Perfect for home networking setups!
 
-## Features
-1. Setting redirecting rules by custom configuration
-2. Built-in DNS proxy which tunneling requests over HTTPS (DoH)
+## Overview ℹ️
+Proxye allows you to create a flexible proxy server that supports custom redirection rules, making it easy to route your traffic through various proxies or services. It features:
+- .NET native implementation which easy integrated in ASP.NET Core projects
+- Custom redirect rules based on domains or URL patterns 📃
+- Built-in DNS proxy with DNS over HTTPS (DoH) tunneling for secure name resolution 🔐
 
-## Installation
-```bash
+## Get Started 🚀
+Follow these steps to set up Proxye in your project:
+
+### 1. Install via NuGet
+Run this in your terminal or Package Manager Console:
+```shell
 dotnet add package Proxye --version 0.0.3
 ```
 
-## Configuration
+### 2. Configure and Run
+Here's a basic example to get you started:
 ```csharp
 builder.Services.AddProxye(o =>
 {
     // DNS configuration
     o.Dns = new DnsOptions
     {
-        BaseTtl = 3600, // base time to live (if it wasn't received from DNS server)
-        Url = "https://dns.google/resolve" // DNS resolver
+        BaseTtl = 3600,
+        Url = "https://dns.google/resolve"
     };
-    o.EnableDns = true; // set false to disable DNS listener
-    o.DnsPort = 52; // port of DNS listener
+    o.EnableDns = true; // enable DNS tunneling
+    o.DnsPort = 52; // DNS listener port
     
-    // Proxy configuration
-    o.Port = 9567; // port of proxy
-    o.Rules = // rules for redirecting
-    [
+    // Proxy server configuration
+    o.Port = 9567; // proxy listening port
+    o.Rules = new List<Rule>
+    {
         new Rule
         {
-            // requests matched this rule will be redirected
-            Domains = ["2ip.io"], // match Host name by domain
-            Pattern = ".*(2ip).*", // or match Host name by pattern
+            Domains = new[] { "2ip.io" }, // domain match
+            Pattern = ".*(2ip).*",       // pattern match
             
-            // configuration of proxy for redirecting
-            Host = "127.0.0.1", // host of another proxy
-            Port = 1080, // port of another proxy
-            Protocol = Protocol.SOCKS5 // protocol of another proxy
+            // Redirect to another proxy
+            Host = "127.0.0.1",
+            Port = 1080,
+            Protocol = Protocol.SOCKS5
         }
-    ];
+    };
 });
 ```
+
+### 3. Run your application
+Start your project, and the proxy server will be ready to route requests based on your rules! 🚥
+
+## Note: Early Alpha Release ⚠️
+Proxye is currently in early stages of development. 💡 This means it is still under active development, and some features may be unstable or incomplete. Your feedback is highly appreciated to help improve and stabilize the project
