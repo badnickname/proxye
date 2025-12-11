@@ -24,7 +24,7 @@ public interface IRules
 
 internal sealed class Rules(IOptions<List<Rule>> options) : IRules
 {
-    private readonly BoundedDictionary<string, Rule?> _map = new(5000);
+    private readonly BoundedDictionary<string, Rule?> _map = new(int.MaxValue - 1);
     private readonly ConcurrentDictionary<Rule, Regex> _regex = new();
     private DomainTree<Rule>? _hostTree;
     private Rule[]? _regexRules;
