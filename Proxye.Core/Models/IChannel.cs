@@ -1,8 +1,10 @@
 namespace Proxye.Core.Models;
 
-public interface IChannel
+public interface IChannel : IDisposable
 {
     void GetHost(out Host host);
+
+    bool IsConnected { get; }
     
     Task SendAsync(Memory<byte> bytes, CancellationToken token);
 

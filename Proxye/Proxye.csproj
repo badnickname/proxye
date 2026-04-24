@@ -16,15 +16,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Proxye.Tunnel\Proxye.Tunnel.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Proxye.Core\Proxye.Core.csproj" />
+      <ProjectReference Include="..\Proxye.Dns\Proxye.Dns.csproj" />
     </ItemGroup>
     
 </Project>

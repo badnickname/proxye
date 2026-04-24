@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Proxye.Core;
+using Proxye.Core.Implementations;
+using Proxye.Core.Models;
 using Proxye.Dns;
-using Proxye.Rules;
-using Proxye.Rules.Models;
-using Proxye.Tunnel;
 
 namespace Proxye;
 
@@ -15,10 +15,13 @@ public static class ProxyeExtensions
 
         services
             .AddDns()
-            .AddRules()
-            .AddTunnel()
+            .AddSingleton<TunnelFactory>()
+            .AddSingleton<InChannelFactory>()
+            .AddSingleton<OutChannelFactory>()
+            .AddSingleton<ProxyeRules>()
+            .AddSingleton<IRules>(sp => sp.GetRequiredService<ProxyeRules>())
+            .AddOptions<ProxyeRuleOptions>().Services
             .AddOptions<ProxyeOptions>().Configure(o => configure?.Invoke(o)).Services
-            .Configure<List<Rule>>(o => o.AddRange(options.Rules))
             .Configure<DnsOptions>(o =>
             {
                 o.Url = options.Dns.Url;

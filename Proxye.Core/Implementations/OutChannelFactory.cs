@@ -1,18 +1,13 @@
-using System.Net.Sockets;
 using Proxye.Core.Implementations.Channel;
 using Proxye.Core.Models;
 
 namespace Proxye.Core.Implementations;
 
-public class OutChannelFactory
+public class OutChannelFactory(IRules rules)
 {
     public IChannel CreateDirect(Host host, Memory<byte> buffer)
-    {
-        return new DirectOutChannel(host, buffer);
-    }
+        => new DirectOutChannel(host, buffer);
 
     public IChannel CreateProxied(Host host, Memory<byte> buffer)
-    {
-        return new ProxyOutChannel(host, buffer);
-    }
+        => new ProxyOutChannel(rules.Host, host, buffer);
 }

@@ -13,7 +13,7 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private Timer? _timer;
 
-    public async Task RunAsync(Socket socket, CancellationToken token)
+    public async Task RunAsync(TcpClient client, CancellationToken token)
     {
         var cancellationToken = CancellationTokenSource
             .CreateLinkedTokenSource(token, _cancellationTokenSource.Token).Token;
@@ -21,10 +21,10 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
         _timer = new Timer(_ => _cancellationTokenSource.Cancel());
         ResetTimer();
 
-        var inChannel = await inFactory.EstablishAsync(socket, _inBuffer, cancellationToken);
+        using var inChannel = await inFactory.EstablishAsync(client, _inBuffer, cancellationToken);
 
         inChannel.GetHost(out var host);
-        var outChannel = rules.Match(host.Address)
+        using var outChannel = rules.Match(host.Address)
             ? outFactory.CreateProxied(host, _outBuffer)
             : outFactory.CreateDirect(host, _outBuffer);
 
@@ -41,9 +41,12 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
 
     private static async Task PassAsync(IChannel from, IChannel to, Action reset, CancellationToken token)
     {
-        while (!token.IsCancellationRequested)
+        while (!token.IsCancellationRequested && from.IsConnected && to.IsConnected)
         {
             var bytes = await from.ReceiveAsync(token);
+
+            if (bytes.Length <= 0 || !from.IsConnected || !to.IsConnected) continue;
+
             await to.SendAsync(bytes, token);
             reset();
         }
