@@ -1,7 +1,5 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Proxye;
-using Host = Proxye.Core.Models.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
@@ -13,6 +11,8 @@ builder.Services
         o.Port = proxye?.Port ?? o.Port;
         o.EnableDns = proxye?.EnableDns ?? o.EnableDns;
         o.DnsPort = proxye?.DnsPort ?? o.DnsPort;
+        var raw = File.ReadAllText("rules.json");
+        o.Rules = JsonSerializer.Deserialize<ProxyeRuleOptions>(raw)!;
     });
 
 var app = builder.Build();
@@ -23,16 +23,5 @@ app.UseEndpoints(e => e.MapControllerRoute(
     "default",
     "{controller=Home}/{action=Index}/{id?}"));
 
-UpdateOptions(app.Services.GetRequiredService<ProxyeRules>());
-
 app.Run();
 return 0;
-
-static void UpdateOptions(ProxyeRules rules)
-{
-    var raw = File.ReadAllText("rules.json");
-    var json = JsonSerializer.Deserialize<JsonNode>(raw);
-
-    rules.UpdateHost(new Host(json["Host"].GetValue<string>(), (ushort) json["Port"].GetValue<int>()));
-    rules.UpdateRegex(json["Regex"].GetValue<string>());
-}

@@ -20,7 +20,6 @@ public static class ProxyeExtensions
             .AddSingleton<OutChannelFactory>()
             .AddSingleton<ProxyeRules>()
             .AddSingleton<IRules>(sp => sp.GetRequiredService<ProxyeRules>())
-            .AddOptions<ProxyeRuleOptions>().Services
             .AddOptions<ProxyeOptions>().Configure(o => configure?.Invoke(o)).Services
             .Configure<DnsOptions>(o =>
             {

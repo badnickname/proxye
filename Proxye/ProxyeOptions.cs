@@ -11,4 +11,6 @@ public sealed class ProxyeOptions
     public DnsOptions Dns { get; set; } = new();
 
     public int DnsPort { get; set; } = 9568;
+
+    public ProxyeRuleOptions Rules { get; set; }
 }

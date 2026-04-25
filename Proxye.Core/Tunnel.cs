@@ -39,7 +39,7 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
     private void ResetTimer()
         => _timer!.Change(TimeSpan.FromSeconds(30), Timeout.InfiniteTimeSpan);
 
-    private static async Task PassAsync(IChannel from, IChannel to, Action reset, CancellationToken token)
+    private async Task PassAsync(IChannel from, IChannel to, Action reset, CancellationToken token)
     {
         while (!token.IsCancellationRequested && from.IsConnected && to.IsConnected)
         {
@@ -50,8 +50,11 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
             await to.SendAsync(bytes, token);
             reset();
         }
+
+        if (!_cancellationTokenSource.IsCancellationRequested)
+            await _cancellationTokenSource.CancelAsync();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         if (_timer is not null)
