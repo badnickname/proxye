@@ -1,11 +1,11 @@
 ﻿# Proxye 🌐
-Proxye is a simple, lightweight HTTP/SOCKS5 proxy for .NET designed to help you redirect requests seamlessly through other proxies or services. Perfect for home networking setups!
+Proxye is a lightweight HTTP proxy for .NET designed to redirect requests matching regex patterns to a SOCKS5 proxy (with potential Shadowsocks support in future versions)  
 
-## Overview ℹ️
-Proxye allows you to create a flexible proxy server that supports custom redirection rules, making it easy to route your traffic through various proxies or services. It features:
-- .NET native implementation which easy integrated in ASP.NET Core projects
-- Custom redirect rules based on domains or URL patterns 📃
-- Built-in DNS proxy with DNS over HTTPS (DoH) tunneling for secure name resolution 🔐
+## Key Features ℹ️
+- Working as HTTP-proxy
+- Traffic filtering via regex matching
+- Easy integrated in ASP.NET Core projects
+- Built-in DNS proxy with DNS over HTTPS (DoH) tunneling for secure name resolution
 
 ## Get Started 🚀
 Follow these steps to set up Proxye in your project:
@@ -13,7 +13,7 @@ Follow these steps to set up Proxye in your project:
 ### 1. Install via NuGet
 Run this in your terminal or Package Manager Console:
 ```shell
-dotnet add package Proxye --version 0.0.3
+dotnet add package Proxye --version 0.1.0
 ```
 
 ### 2. Configure and Run
@@ -32,18 +32,11 @@ builder.Services.AddProxye(o =>
     
     // Proxy server configuration
     o.Port = 9567; // proxy listening port
-    o.Rules = new List<Rule>
+    o.Rules = new ProxyeRuleOptions
     {
-        new Rule
-        {
-            Domains = new[] { "2ip.io" }, // domain match
-            Pattern = ".*(2ip).*",       // pattern match
-            
-            // Redirect to another proxy
-            Host = "127.0.0.1",
-            Port = 1080,
-            Protocol = Protocol.SOCKS5
-        }
+        Regex = ".*(google|youtube).*", // domains which be redirected to socks5
+        Host = "127.0.0.1", // socks5 host
+        Port = 1080 // socks5 port
     };
 });
 ```

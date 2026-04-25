@@ -1,14 +1,13 @@
-﻿using System.Diagnostics;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Proxye.Tunnel;
+using Proxye.Core;
 
 namespace Proxye;
 
-internal sealed class TunnelHostedService(IOptions<ProxyeOptions> options, ILogger<TunnelHostedService> logger, IProxyeFactory factory) : BackgroundService
+internal sealed class TunnelHostedService(IOptions<ProxyeOptions> options, ILogger<TunnelHostedService> logger, TunnelFactory factory) : BackgroundService
 {
     private const string Service = "Proxye";
     private readonly TcpListener _listener = new(IPAddress.Any, options.Value.Port);
@@ -28,28 +27,23 @@ internal sealed class TunnelHostedService(IOptions<ProxyeOptions> options, ILogg
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var socket = await tcp.AcceptSocketAsync(stoppingToken);
-            var tunnel = factory.Create(socket);
-            Queue(tunnel, stoppingToken);
+            var client = await tcp.AcceptTcpClientAsync(stoppingToken);
+            var tunnel = factory.Create();
+            Queue(tunnel, client, stoppingToken);
         }
     }
 
-    private void Queue(IProxyeTunnel tunnel, CancellationToken stoppingToken)
+    private static void Queue(Tunnel tunnel, TcpClient client, CancellationToken stoppingToken)
     {
         Task.Run(async () =>
         {
-            var stopwatch = Stopwatch.StartNew();
             try
             {
-                await tunnel.StartAsync(stoppingToken);
-                logger.LogDebug("{Service}: connect {Host}:{Port}", Service, tunnel.Host, tunnel.Port);
-                await tunnel.LoopAsync(stoppingToken);
-                logger.LogDebug("{Service}: disconnect {Host}:{Port} - {Time}ms", Service, tunnel.Host, tunnel.Port, stopwatch.ElapsedMilliseconds);
+                await tunnel.RunAsync(client, stoppingToken);
             }
             finally
             {
-                stopwatch.Stop();
-                tunnel.Dispose();
+                await tunnel.DisposeAsync();
             }
         }, stoppingToken);
     }

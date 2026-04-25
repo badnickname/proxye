@@ -10,9 +10,4 @@
       <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.20" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Proxye.Dns\Proxye.Dns.csproj" />
-      <ProjectReference Include="..\Proxye.Rules\Proxye.Rules.csproj" />
-    </ItemGroup>
-
 </Project>

@@ -4,7 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>0.0.2</Version>
+        <Version>0.1.0</Version>
         <Authors>Maltsev Bogdan</Authors>
         <Description>Simple proxy which able to redirect requests to another proxies</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -16,15 +16,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Proxye.Tunnel\Proxye.Tunnel.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Proxye.Core\Proxye.Core.csproj" />
+      <ProjectReference Include="..\Proxye.Dns\Proxye.Dns.csproj" />
     </ItemGroup>
     
 </Project>
