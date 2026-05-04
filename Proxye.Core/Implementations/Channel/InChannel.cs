@@ -19,6 +19,7 @@ internal sealed class InChannel(TcpClient client, Memory<byte> buffer) : IChanne
     private int _count;
     private readonly SemaphoreSlim _semaphoreSlim = new(0, 1);
     private readonly NetworkStream _stream = client.GetStream();
+    private bool _isDisconnected;
 
     public async Task EstablishAsync(CancellationToken token)
     {
@@ -57,8 +58,8 @@ internal sealed class InChannel(TcpClient client, Memory<byte> buffer) : IChanne
 
         await _stream.WriteAsync(bytes, token);
     }
-    
-    public bool IsConnected => _stream is { CanRead: true, CanWrite: true } && client.Connected;
+
+    public bool IsConnected => !_isDisconnected && _stream is { CanRead: true, CanWrite: true } && client.Connected;
 
     public async Task<Memory<byte>> ReceiveAsync(CancellationToken token)
     {
@@ -67,12 +68,9 @@ internal sealed class InChannel(TcpClient client, Memory<byte> buffer) : IChanne
             return request.Value;
         }
 
-        if (client.Available < 1) 
-        {
-            await Task.Delay(100, token);
-        }
-
         var receive = await _stream.ReadAsync(buffer, token);
+        if (receive < 1)
+            _isDisconnected = true;
 
         return buffer[..receive];
     }

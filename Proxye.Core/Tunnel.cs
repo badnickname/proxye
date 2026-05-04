@@ -41,12 +41,9 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
 
     private async Task PassAsync(IChannel from, IChannel to, Action reset, CancellationToken token)
     {
-        while (!token.IsCancellationRequested && from.IsConnected && to.IsConnected)
+        while (!token.IsCancellationRequested && from.IsConnected)
         {
             var bytes = await from.ReceiveAsync(token);
-
-            if (bytes.Length <= 0 || !from.IsConnected || !to.IsConnected) continue;
-
             await to.SendAsync(bytes, token);
             reset();
         }
@@ -59,6 +56,7 @@ public sealed class Tunnel(IRules rules, InChannelFactory inFactory, OutChannelF
     {
         if (_timer is not null)
             await _timer.DisposeAsync();
+
         ArrayPool<byte>.Shared.Return(_inBuffer);
         ArrayPool<byte>.Shared.Return(_outBuffer);
     }
